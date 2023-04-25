@@ -146,29 +146,29 @@ abstract class MarkdownWidget extends StatefulWidget {
   /// Creates a widget that parses and displays Markdown.
   ///
   /// The [data] argument must not be null.
-  const MarkdownWidget({
-    super.key,
-    required this.data,
-    this.selectable = false,
-    this.styleSheet,
-    this.styleSheetTheme = MarkdownStyleSheetBaseTheme.material,
-    this.syntaxHighlighter,
-    this.onTapLink,
-    this.onTapText,
-    this.imageDirectory,
-    this.blockSyntaxes,
-    this.inlineSyntaxes,
-    this.extensionSet,
-    this.imageBuilder,
-    this.checkboxBuilder,
-    this.bulletBuilder,
-    this.builders = const <String, MarkdownElementBuilder>{},
-    this.paddingBuilders = const <String, MarkdownPaddingBuilder>{},
-    this.fitContent = false,
-    this.listItemCrossAxisAlignment =
-        MarkdownListItemCrossAxisAlignment.baseline,
-    this.softLineBreak = false,
-  });
+  const MarkdownWidget(
+      {super.key,
+      required this.data,
+      this.selectable = false,
+      this.styleSheet,
+      this.styleSheetTheme = MarkdownStyleSheetBaseTheme.material,
+      this.syntaxHighlighter,
+      this.onTapLink,
+      this.onTapText,
+      this.imageDirectory,
+      this.blockSyntaxes,
+      this.inlineSyntaxes,
+      this.extensionSet,
+      this.imageBuilder,
+      this.checkboxBuilder,
+      this.bulletBuilder,
+      this.builders = const <String, MarkdownElementBuilder>{},
+      this.paddingBuilders = const <String, MarkdownPaddingBuilder>{},
+      this.fitContent = false,
+      this.listItemCrossAxisAlignment =
+          MarkdownListItemCrossAxisAlignment.baseline,
+      this.softLineBreak = false,
+      this.codeBlockMaxHeight});
 
   /// The Markdown to display.
   final String data;
@@ -198,6 +198,9 @@ abstract class MarkdownWidget extends StatefulWidget {
 
   /// Default tap handler used when [selectable] is set to true
   final VoidCallback? onTapText;
+
+  /// Max Height for code blocks
+  final int? codeBlockMaxHeight;
 
   /// The base directory holding images referenced by Img tags with local or network file paths.
   final String? imageDirectory;
@@ -335,6 +338,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
       listItemCrossAxisAlignment: widget.listItemCrossAxisAlignment,
       onTapText: widget.onTapText,
       softLineBreak: widget.softLineBreak,
+      codeBlockMaxHeight: widget.codeBlockMaxHeight,
     );
 
     _children = builder.build(astNodes);
@@ -413,6 +417,7 @@ class MarkdownBody extends MarkdownWidget {
     this.shrinkWrap = true,
     super.fitContent = true,
     super.softLineBreak,
+    super.codeBlockMaxHeight,
   });
 
   /// If [shrinkWrap] is `true`, [MarkdownBody] will take the minimum height
@@ -445,34 +450,34 @@ class MarkdownBody extends MarkdownWidget {
 ///  * <https://github.github.com/gfm/>
 class Markdown extends MarkdownWidget {
   /// Creates a scrolling widget that parses and displays Markdown.
-  const Markdown({
-    super.key,
-    required super.data,
-    super.selectable,
-    super.styleSheet,
-    // TODO(stuartmorgan): Remove this once 3.0 is no longer part of the
-    // legacy analysis matrix; it's a false positive there.
-    // ignore: avoid_init_to_null
-    super.styleSheetTheme = null,
-    super.syntaxHighlighter,
-    super.onTapLink,
-    super.onTapText,
-    super.imageDirectory,
-    super.blockSyntaxes,
-    super.inlineSyntaxes,
-    super.extensionSet,
-    super.imageBuilder,
-    super.checkboxBuilder,
-    super.bulletBuilder,
-    super.builders,
-    super.paddingBuilders,
-    super.listItemCrossAxisAlignment,
-    this.padding = const EdgeInsets.all(16.0),
-    this.controller,
-    this.physics,
-    this.shrinkWrap = false,
-    super.softLineBreak,
-  });
+  const Markdown(
+      {super.key,
+      required super.data,
+      super.selectable,
+      super.styleSheet,
+      // TODO(stuartmorgan): Remove this once 3.0 is no longer part of the
+      // legacy analysis matrix; it's a false positive there.
+      // ignore: avoid_init_to_null
+      super.styleSheetTheme = null,
+      super.syntaxHighlighter,
+      super.onTapLink,
+      super.onTapText,
+      super.imageDirectory,
+      super.blockSyntaxes,
+      super.inlineSyntaxes,
+      super.extensionSet,
+      super.imageBuilder,
+      super.checkboxBuilder,
+      super.bulletBuilder,
+      super.builders,
+      super.paddingBuilders,
+      super.listItemCrossAxisAlignment,
+      this.padding = const EdgeInsets.all(16.0),
+      this.controller,
+      this.physics,
+      this.shrinkWrap = false,
+      super.softLineBreak,
+      super.codeBlockMaxHeight});
 
   /// The amount of space by which to inset the children.
   final EdgeInsets padding;
