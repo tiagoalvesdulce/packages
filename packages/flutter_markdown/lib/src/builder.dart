@@ -27,7 +27,7 @@ const List<String> _kBlockTags = <String>[
   'table',
   'thead',
   'tbody',
-  'tr'
+  'tr',
 ];
 
 const List<String> _kListTags = <String>['ul', 'ol'];
@@ -106,6 +106,7 @@ class MarkdownBuilder implements md.NodeVisitor {
     this.fitContent = false,
     this.onTapText,
     this.softLineBreak = false,
+    this.codeBlockMaxHeight,
   });
 
   /// A delegate that controls how link and `pre` elements behave.
@@ -157,12 +158,16 @@ class MarkdownBuilder implements md.NodeVisitor {
   /// specification on soft line breaks when lines of text are joined.
   final bool softLineBreak;
 
+  /// The code block max height;
+  final int? codeBlockMaxHeight;
+
   final List<String> _listIndents = <String>[];
   final List<_BlockElement> _blocks = <_BlockElement>[];
   final List<_TableElement> _tables = <_TableElement>[];
   final List<_InlineElement> _inlines = <_InlineElement>[];
   final List<GestureRecognizer> _linkHandlers = <GestureRecognizer>[];
   final ScrollController _preScrollController = ScrollController();
+  final ScrollController _preVerticalScrollController = ScrollController();
   String? _currentBlockTag;
   String? _lastVisitedTag;
   bool _isInBlockquote = false;
@@ -328,15 +333,43 @@ class MarkdownBuilder implements md.NodeVisitor {
       child = builders[_blocks.last.tag!]!
           .visitText(text, styleSheet.styles[_blocks.last.tag!]);
     } else if (_blocks.last.tag == 'pre') {
-      child = Scrollbar(
-        controller: _preScrollController,
-        child: SingleChildScrollView(
+      if (codeBlockMaxHeight != null) {
+        child = ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 200),
+          child: Scrollbar(
+            controller: _preVerticalScrollController,
+            child: SingleChildScrollView(
+              controller: _preVerticalScrollController,
+              child: Scrollbar(
+                controller: _preScrollController,
+                child: SingleChildScrollView(
+                  controller: _preScrollController,
+                  scrollDirection: Axis.horizontal,
+                  padding: styleSheet.codeblockPadding,
+                  child: builders.containsKey('codeblock')
+                      ? builders['codeblock']!
+                          .visitText(text, styleSheet.styles['code'])
+                      : _buildRichText(
+                          delegate.formatText(styleSheet, text.text)),
+                ),
+              ),
+            ),
+          ),
+        );
+      } else {
+        child = Scrollbar(
           controller: _preScrollController,
-          scrollDirection: Axis.horizontal,
-          padding: styleSheet.codeblockPadding,
-          child: _buildRichText(delegate.formatText(styleSheet, text.text)),
-        ),
-      );
+          child: SingleChildScrollView(
+            controller: _preScrollController,
+            scrollDirection: Axis.horizontal,
+            padding: styleSheet.codeblockPadding,
+            child: builders.containsKey('codeblock')
+                ? builders['codeblock']!
+                    .visitText(text, styleSheet.styles['code'])
+                : _buildRichText(delegate.formatText(styleSheet, text.text)),
+          ),
+        );
+      }
     } else {
       child = _buildRichText(
         TextSpan(
@@ -676,11 +709,9 @@ class MarkdownBuilder implements md.NodeVisitor {
   ) {
     final List<Widget> mergedTexts = <Widget>[];
     for (final Widget child in children) {
-      if (mergedTexts.isNotEmpty &&
-          mergedTexts.last is RichText &&
-          child is RichText) {
-        final RichText previous = mergedTexts.removeLast() as RichText;
-        final TextSpan previousTextSpan = previous.text as TextSpan;
+      if (mergedTexts.isNotEmpty && mergedTexts.last is Text && child is Text) {
+        final Text previous = mergedTexts.removeLast() as Text;
+        final TextSpan previousTextSpan = previous.textSpan! as TextSpan;
         final List<TextSpan> children = previousTextSpan.children != null
             ? previousTextSpan.children!
                 .map((InlineSpan span) => span is! TextSpan
@@ -688,7 +719,7 @@ class MarkdownBuilder implements md.NodeVisitor {
                     : span)
                 .toList()
             : <TextSpan>[previousTextSpan];
-        children.add(child.text as TextSpan);
+        children.add(child.textSpan! as TextSpan);
         final TextSpan? mergedSpan = _mergeSimilarTextSpans(children);
         mergedTexts.add(_buildRichText(
           mergedSpan,
@@ -825,22 +856,12 @@ class MarkdownBuilder implements md.NodeVisitor {
   Widget _buildRichText(TextSpan? text, {TextAlign? textAlign, String? key}) {
     //Adding a unique key prevents the problem of using the same link handler for text spans with the same text
     final Key k = key == null ? UniqueKey() : Key(key);
-    if (selectable) {
-      return SelectableText.rich(
-        text!,
-        textScaleFactor: styleSheet.textScaleFactor,
-        textAlign: textAlign ?? TextAlign.start,
-        onTap: onTapText,
-        key: k,
-      );
-    } else {
-      return RichText(
-        text: text!,
-        textScaleFactor: styleSheet.textScaleFactor!,
-        textAlign: textAlign ?? TextAlign.start,
-        key: k,
-      );
-    }
+    return Text.rich(
+      text!,
+      textScaleFactor: styleSheet.textScaleFactor!,
+      textAlign: textAlign ?? TextAlign.start,
+      key: k,
+    );
   }
 
   /// This allows a value of type T or T? to be treated as a value of type T?.
