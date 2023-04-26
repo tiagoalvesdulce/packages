@@ -335,7 +335,8 @@ class MarkdownBuilder implements md.NodeVisitor {
     } else if (_blocks.last.tag == 'pre') {
       if (codeBlockMaxHeight != null) {
         child = ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
+          constraints:
+              const BoxConstraints(maxHeight: 200, minWidth: double.maxFinite),
           child: Scrollbar(
             controller: _preVerticalScrollController,
             child: SingleChildScrollView(
